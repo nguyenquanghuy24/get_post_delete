@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { apiRequest } from "@/services/api";
 
 interface LoginResponse {
@@ -9,16 +10,15 @@ interface LoginResponse {
 }
 
 export default function LoginPage() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
-    setSuccess("");
 
     const normalizedUsername = username.trim();
     const normalizedPassword = password.trim();
@@ -35,7 +35,7 @@ export default function LoginPage() {
 
     try {
       setSubmitting(true);
-      await apiRequest<LoginResponse>("/auth/login", {
+      const data = await apiRequest<LoginResponse>("/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -44,7 +44,9 @@ export default function LoginPage() {
           expiresInMins: 30,
         }),
       });
-      setSuccess("Đăng nhập thành công.");
+      window.localStorage.setItem("accessToken", data.accessToken);
+      window.localStorage.setItem("refreshToken", data.refreshToken);
+      router.replace("/profile");
     } catch {
       setError("Tên đăng nhập hoặc mật khẩu không đúng.");
     } finally {
@@ -72,7 +74,6 @@ export default function LoginPage() {
               onChange={(event) => {
                 setUsername(event.target.value);
                 setError("");
-                setSuccess("");
               }}
               className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
             />
@@ -91,7 +92,6 @@ export default function LoginPage() {
               onChange={(event) => {
                 setPassword(event.target.value);
                 setError("");
-                setSuccess("");
               }}
               className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
             />
@@ -100,12 +100,6 @@ export default function LoginPage() {
           {error && (
             <p aria-live="polite" className="text-sm text-red-600">
               {error}
-            </p>
-          )}
-
-          {success && (
-            <p aria-live="polite" className="text-sm text-green-600">
-              {success}
             </p>
           )}
 
