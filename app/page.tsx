@@ -9,6 +9,8 @@ interface TodoResponse {
   todos: Todo[];
 }
 
+type TodoFilter = "all" | "active" | "completed";
+
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [newTodo, setNewTodo] = useState("");
@@ -18,6 +20,8 @@ export default function Home() {
   const [saving, setSaving] = useState(false);
   const [busyTodoId, setBusyTodoId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [statusFilter, setStatusFilter] = useState<TodoFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -146,6 +150,20 @@ export default function Home() {
   }
 
   const completedCount = todos.filter((todo) => todo.completed).length;
+  const normalizedSearchQuery = searchQuery.trim().toLowerCase();
+  const visibleTodos = todos.filter((todo) => {
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "completed" ? todo.completed : !todo.completed);
+    const matchesSearch = todo.todo.toLowerCase().includes(normalizedSearchQuery);
+
+    return matchesStatus && matchesSearch;
+  });
+  const filters: Array<{ value: TodoFilter; label: string }> = [
+    { value: "all", label: "Tất cả" },
+    { value: "active", label: "Chưa làm" },
+    { value: "completed", label: "Đã xong" },
+  ];
 
   return (
     <main className="min-h-screen bg-gray-100 px-4 py-10 text-gray-800">
@@ -170,6 +188,33 @@ export default function Home() {
           </button>
         </form>
 
+        <div className="mb-6 space-y-3">
+          <label htmlFor="todo-search" className="sr-only">
+            Tìm kiếm công việc
+          </label>
+          <input
+            id="todo-search"
+            type="search"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Tìm kiếm công việc..."
+            className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+          />
+          <div className="flex flex-wrap gap-2" aria-label="Lọc công việc">
+            {filters.map((filter) => (
+              <button
+                key={filter.value}
+                type="button"
+                aria-pressed={statusFilter === filter.value}
+                onClick={() => setStatusFilter(filter.value)}
+                className={`rounded px-3 py-1 text-sm ${statusFilter === filter.value ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+              >
+                {filter.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {error && (
           <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">
             <p>{error}</p>
@@ -181,9 +226,11 @@ export default function Home() {
           <p className="text-center text-gray-500">Đang tải...</p>
         ) : todos.length === 0 ? (
           <p className="text-center text-gray-500">Chưa có công việc nào.</p>
+        ) : visibleTodos.length === 0 ? (
+          <p className="text-center text-gray-500">Không tìm thấy công việc phù hợp.</p>
         ) : (
           <ul className="space-y-3">
-            {todos.map((item) => (
+            {visibleTodos.map((item) => (
               <TodoItem
                 key={item.id}
                 item={item}
