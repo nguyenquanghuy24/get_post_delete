@@ -1,8 +1,26 @@
 "use client";
 
+import { useState } from "react";
+
 export default function LoginPage() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (!username.trim()) {
+      setError("Vui lòng nhập tên đăng nhập.");
+      return;
+    }
+
+    if (!password.trim()) {
+      setError("Vui lòng nhập mật khẩu.");
+      return;
+    }
+
+    setError("");
   };
 
   return (
@@ -21,6 +39,11 @@ export default function LoginPage() {
               name="username"
               type="text"
               autoComplete="username"
+              value={username}
+              onChange={(event) => {
+                setUsername(event.target.value);
+                setError("");
+              }}
               className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
             />
           </div>
@@ -34,9 +57,20 @@ export default function LoginPage() {
               name="password"
               type="password"
               autoComplete="current-password"
+              value={password}
+              onChange={(event) => {
+                setPassword(event.target.value);
+                setError("");
+              }}
               className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
             />
           </div>
+
+          {error && (
+            <p aria-live="polite" className="text-sm text-red-600">
+              {error}
+            </p>
+          )}
 
           <button
             type="submit"
