@@ -1,27 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/services/api";
-
-interface Product {
-  id: number;
-  title: string;
-  price: number;
-  thumbnail?: string;
-  isLocal?: boolean;
-}
+import Cart, { type CartItem } from "@/components/Cart";
+import ProductCard, { type Product } from "@/components/ProductCard";
 
 interface ProductResponse {
   products: Product[];
-}
-
-interface CartItem {
-  id: number;
-  title: string;
-  price: number;
-  quantity: number;
 }
 
 export default function ProductsPage() {
@@ -29,6 +15,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [cartSavingId, setCartSavingId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -89,7 +76,10 @@ export default function ProductsPage() {
   }
 
   async function handleAddToCart(product: Product) {
+    if (cartSavingId !== null) return;
+
     try {
+      setCartSavingId(product.id);
       setError("");
       if (!product.isLocal) {
         await apiRequest("/carts/add", {
@@ -109,6 +99,8 @@ export default function ProductsPage() {
       setNotice(`Đã thêm "${product.title}" vào giỏ hàng!`);
     } catch {
       setError("Không thể thêm sản phẩm vào giỏ hàng.");
+    } finally {
+      setCartSavingId(null);
     }
   }
 
@@ -121,9 +113,6 @@ export default function ProductsPage() {
   const removeFromCart = (id: number) => {
     setCart((previousCart) => previousCart.filter((item) => item.id !== id));
   };
-
-  const totalQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (
     <main className="min-h-screen bg-gray-100 px-4 py-8 text-gray-800">
@@ -147,27 +136,7 @@ export default function ProductsPage() {
               </form>
             </div>
 
-            <div className="rounded-lg bg-white p-5 shadow">
-              <h2 className="mb-3 text-lg font-bold">Giỏ hàng ({totalQuantity})</h2>
-              {cart.length === 0 ? <p className="text-sm text-gray-500">Chưa có sản phẩm nào.</p> : (
-                <div className="space-y-3">
-                  <ul className="divide-y text-sm">
-                    {cart.map((item) => (
-                      <li key={item.id} className="flex flex-col gap-2 py-3">
-                        <div className="flex justify-between gap-2"><span>{item.title}</span><span>${(item.price * item.quantity).toFixed(2)}</span></div>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => updateQuantity(item.id, -1)} className="rounded bg-gray-200 px-2">−</button>
-                          <span>{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, 1)} className="rounded bg-gray-200 px-2">+</button>
-                          <button onClick={() => removeFromCart(item.id)} className="ml-auto text-red-600 hover:underline">Xóa</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex justify-between border-t pt-2 font-bold"><span>Tổng cộng:</span><span className="text-blue-600">${totalPrice.toFixed(2)}</span></div>
-                </div>
-              )}
-            </div>
+            <Cart items={cart} onUpdateQuantity={updateQuantity} onRemove={removeFromCart} />
           </div>
 
           <div className="rounded-lg bg-white p-5 shadow md:col-span-2">
@@ -175,14 +144,12 @@ export default function ProductsPage() {
             {loading ? <p className="text-gray-500">Đang tải sản phẩm...</p> : products.length === 0 ? <p className="text-gray-500">Không có sản phẩm.</p> : (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {products.map((product) => (
-                  <div key={product.id} className="flex flex-col justify-between gap-3 rounded-lg border p-4">
-                    <div>
-                      {product.thumbnail ? <Image src={product.thumbnail} alt={product.title} width={320} height={144} className="mb-3 h-36 w-full rounded bg-gray-50 object-cover" /> : <div className="mb-3 flex h-36 w-full items-center justify-center rounded bg-gray-100 text-sm text-gray-400">Sản phẩm mới</div>}
-                      <h3 className="font-semibold">{product.title}</h3>
-                      <p className="mt-1 font-bold text-blue-600">${product.price.toFixed(2)}</p>
-                    </div>
-                    <button onClick={() => void handleAddToCart(product)} className="w-full rounded bg-emerald-600 py-2 text-sm text-white hover:bg-emerald-700">+ Thêm vào giỏ</button>
-                  </div>
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    isAdding={cartSavingId === product.id}
+                    onAddToCart={() => void handleAddToCart(product)}
+                  />
                 ))}
               </div>
             )}

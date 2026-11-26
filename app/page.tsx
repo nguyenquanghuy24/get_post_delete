@@ -3,14 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { apiRequest } from "@/services/api";
-
-interface Todo {
-  id: number;
-  todo: string;
-  completed: boolean;
-  userId: number;
-  isLocal?: boolean;
-}
+import TodoItem, { type Todo } from "@/components/TodoItem";
 
 interface TodoResponse {
   todos: Todo[];
@@ -23,6 +16,7 @@ export default function Home() {
   const [editingText, setEditingText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [busyTodoId, setBusyTodoId] = useState<number | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -76,8 +70,10 @@ export default function Home() {
 
   async function handleToggle(item: Todo) {
     const nextCompleted = !item.completed;
+    if (busyTodoId !== null) return;
 
     try {
+      setBusyTodoId(item.id);
       setError("");
       if (!item.isLocal) {
         await apiRequest(`/todos/${item.id}`, {
@@ -93,6 +89,8 @@ export default function Home() {
       );
     } catch {
       setError("Không thể cập nhật công việc.");
+    } finally {
+      setBusyTodoId(null);
     }
   }
 
@@ -104,10 +102,11 @@ export default function Home() {
   async function handleSaveEdit(event: React.FormEvent<HTMLFormElement>, item: Todo) {
     event.preventDefault();
     const todoText = editingText.trim();
-    if (!todoText || saving) return;
+    if (!todoText || saving || busyTodoId !== null) return;
 
     try {
       setSaving(true);
+      setBusyTodoId(item.id);
       setError("");
       if (!item.isLocal) {
         await apiRequest(`/todos/${item.id}`, {
@@ -127,18 +126,22 @@ export default function Home() {
       setError("Không thể lưu công việc.");
     } finally {
       setSaving(false);
+      setBusyTodoId(null);
     }
   }
 
   async function handleDelete(item: Todo) {
-    if (!window.confirm("Bạn có chắc muốn xóa công việc này không?")) return;
+    if (busyTodoId !== null || !window.confirm("Bạn có chắc muốn xóa công việc này không?")) return;
 
     try {
+      setBusyTodoId(item.id);
       setError("");
       if (!item.isLocal) await apiRequest(`/todos/${item.id}`, { method: "DELETE" });
       setTodos((previousTodos) => previousTodos.filter((todo) => todo.id !== item.id));
     } catch {
       setError("Không thể xóa công việc.");
+    } finally {
+      setBusyTodoId(null);
     }
   }
 
@@ -181,27 +184,20 @@ export default function Home() {
         ) : (
           <ul className="space-y-3">
             {todos.map((item) => (
-              <li key={item.id} className="flex items-center justify-between gap-2 rounded border p-3">
-                {editingId === item.id ? (
-                  <form onSubmit={(event) => void handleSaveEdit(event, item)} className="flex flex-1 gap-2">
-                    <input autoFocus type="text" value={editingText} onChange={(event) => setEditingText(event.target.value)} className="min-w-0 flex-1 rounded border border-blue-400 px-2 py-1" />
-                    <button type="submit" disabled={saving} className="rounded bg-green-600 px-3 py-1 text-sm text-white disabled:opacity-50">Lưu</button>
-                    <button type="button" onClick={() => { setEditingId(null); setEditingText(""); }} className="rounded bg-gray-300 px-3 py-1 text-sm">Hủy</button>
-                  </form>
-                ) : (
-                  <>
-                    {/* Todo display with an accessible label. */}
-                    <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2">
-                      <input type="checkbox" checked={item.completed} onChange={() => void handleToggle(item)} className="h-4 w-4" />
-                      <span className={`break-words ${item.completed ? "text-gray-400 line-through" : ""}`}>{item.todo}</span>
-                    </label>
-                    <div className="flex shrink-0 gap-2">
-                      <button onClick={() => startEdit(item)} className="text-sm text-blue-600 hover:underline">Sửa</button>
-                      <button onClick={() => void handleDelete(item)} className="text-sm text-red-600 hover:underline">Xóa</button>
-                    </div>
-                  </>
-                )}
-              </li>
+              <TodoItem
+                key={item.id}
+                item={item}
+                isEditing={editingId === item.id}
+                editingText={editingText}
+                saving={saving}
+                busy={busyTodoId !== null}
+                onEditingTextChange={setEditingText}
+                onSave={(event) => void handleSaveEdit(event, item)}
+                onCancel={() => { setEditingId(null); setEditingText(""); }}
+                onToggle={() => void handleToggle(item)}
+                onStartEdit={() => startEdit(item)}
+                onDelete={() => void handleDelete(item)}
+              />
             ))}
           </ul>
         )}
