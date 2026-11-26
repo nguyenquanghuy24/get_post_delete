@@ -180,7 +180,7 @@ export default function Home() {
             type="text"
             value={newTodo}
             onChange={(event) => setNewTodo(event.target.value)}
-            placeholder="Nhập công việc mới..."
+            placeholder="Nhập công việc"
             className="min-w-0 flex-1 rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
           />
           <button type="submit" disabled={saving} className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
@@ -197,10 +197,10 @@ export default function Home() {
             type="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Tìm kiếm công việc..."
+            placeholder="Tìm kiếm"
             className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
           />
-          <div className="flex flex-wrap gap-2" aria-label="Lọc công việc">
+          <div className="flex flex-wrap gap-2" aria-label="Lọc">
             {filters.map((filter) => (
               <button
                 key={filter.value}
