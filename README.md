@@ -1,6 +1,6 @@
 # DummyJSON Practice
 
-Small Next.js App Router practice project for Todo and product management.
+Practice Todo and product management.
 
 ## Setup
 

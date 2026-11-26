@@ -98,7 +98,7 @@ export default function ProductsPage() {
       });
       setNotice(`Đã thêm "${product.title}" vào giỏ hàng!`);
     } catch {
-      setError("Không thể thêm sản phẩm vào giỏ hàng.");
+      setError("Không thể thêm sản phẩm vào giỏ hàng");
     } finally {
       setCartSavingId(null);
     }

@@ -31,7 +31,7 @@ export default function Home() {
         setTodos(data.todos);
       } catch (requestError) {
         if (requestError instanceof DOMException && requestError.name === "AbortError") return;
-        setError("Không thể tải danh sách công việc. Vui lòng thử lại.");
+        setError("Không thể tải danh sách công việc");
       } finally {
         setLoading(false);
       }
@@ -62,7 +62,7 @@ export default function Home() {
       ]);
       setNewTodo("");
     } catch {
-      setError("Không thể thêm công việc. Vui lòng thử lại.");
+      setError("Không thể thêm công việc");
     } finally {
       setSaving(false);
     }
@@ -131,7 +131,7 @@ export default function Home() {
   }
 
   async function handleDelete(item: Todo) {
-    if (busyTodoId !== null || !window.confirm("Bạn có chắc muốn xóa công việc này không?")) return;
+    if (busyTodoId !== null || !window.confirm("xóa công việc này?")) return;
 
     try {
       setBusyTodoId(item.id);
@@ -151,8 +151,8 @@ export default function Home() {
     <main className="min-h-screen bg-gray-100 px-4 py-10 text-gray-800">
       <div className="mx-auto max-w-lg rounded-lg bg-white p-6 shadow">
         <div className="mb-4 flex items-center justify-between gap-3">
-          <h1 className="text-2xl font-bold">Bài 1: Quản lý Todo</h1>
-          <Link href="/products" className="text-sm text-blue-600 hover:underline">Bài 2</Link>
+          <h1 className="text-2xl font-bold">Task 1: Quản lý Todo</h1>
+          <Link href="/products" className="text-sm text-blue-600 hover:underline">Task 2</Link>
         </div>
 
         <p className="mb-4 text-sm text-gray-600">Đã hoàn thành: {completedCount}/{todos.length}</p>
