@@ -1,26 +1,55 @@
 "use client";
 
 import { useState } from "react";
+import { apiRequest } from "@/services/api";
+
+interface LoginResponse {
+  accessToken: string;
+  refreshToken: string;
+}
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setError("");
+    setSuccess("");
 
-    if (!username.trim()) {
+    const normalizedUsername = username.trim();
+    const normalizedPassword = password.trim();
+
+    if (!normalizedUsername) {
       setError("Vui lòng nhập tên đăng nhập.");
       return;
     }
 
-    if (!password.trim()) {
+    if (!normalizedPassword) {
       setError("Vui lòng nhập mật khẩu.");
       return;
     }
 
-    setError("");
+    try {
+      setSubmitting(true);
+      await apiRequest<LoginResponse>("/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: normalizedUsername,
+          password: normalizedPassword,
+          expiresInMins: 30,
+        }),
+      });
+      setSuccess("Đăng nhập thành công.");
+    } catch {
+      setError("Tên đăng nhập hoặc mật khẩu không đúng.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -43,6 +72,7 @@ export default function LoginPage() {
               onChange={(event) => {
                 setUsername(event.target.value);
                 setError("");
+                setSuccess("");
               }}
               className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
             />
@@ -61,6 +91,7 @@ export default function LoginPage() {
               onChange={(event) => {
                 setPassword(event.target.value);
                 setError("");
+                setSuccess("");
               }}
               className="w-full rounded border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
             />
@@ -72,11 +103,18 @@ export default function LoginPage() {
             </p>
           )}
 
+          {success && (
+            <p aria-live="polite" className="text-sm text-green-600">
+              {success}
+            </p>
+          )}
+
           <button
             type="submit"
+            disabled={submitting}
             className="w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700"
           >
-            Đăng nhập
+            {submitting ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
         </form>
       </section>
