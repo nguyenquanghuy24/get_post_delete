@@ -20,6 +20,7 @@ export default function Home() {
   const [saving, setSaving] = useState(false);
   const [busyTodoId, setBusyTodoId] = useState<number | null>(null);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [statusFilter, setStatusFilter] = useState<TodoFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -45,6 +46,12 @@ export default function Home() {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    if (!notice) return;
+    const timeoutId = window.setTimeout(() => setNotice(""), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [notice]);
+
   const handleRetry = () => window.location.reload();
 
   async function handleAdd(event: React.FormEvent<HTMLFormElement>) {
@@ -65,6 +72,7 @@ export default function Home() {
         ...previousTodos,
       ]);
       setNewTodo("");
+      setNotice("Đã thêm công việc thành công.");
     } catch {
       setError("Không thể thêm công việc");
     } finally {
@@ -126,6 +134,7 @@ export default function Home() {
       );
       setEditingId(null);
       setEditingText("");
+      setNotice("Đã sửa công việc thành công.");
     } catch {
       setError("Không thể lưu công việc.");
     } finally {
@@ -142,6 +151,7 @@ export default function Home() {
       setError("");
       if (!item.isLocal) await apiRequest(`/todos/${item.id}`, { method: "DELETE" });
       setTodos((previousTodos) => previousTodos.filter((todo) => todo.id !== item.id));
+      setNotice("Đã xóa công việc thành công.");
     } catch {
       setError("Không thể xóa công việc.");
     } finally {
@@ -219,6 +229,12 @@ export default function Home() {
           <div className="mb-4 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-700">
             <p>{error}</p>
             <button onClick={handleRetry} className="mt-2 font-semibold underline">Thử lại</button>
+          </div>
+        )}
+
+        {notice && (
+          <div role="status" aria-live="polite" className="mb-4 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-700">
+            {notice}
           </div>
         )}
 
