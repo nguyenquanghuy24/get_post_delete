@@ -13,21 +13,25 @@ export interface Product {
 interface ProductCardProps {
   product: Product;
   isAdding: boolean;
+  isPriority?: boolean;
   onAddToCart: () => void;
 }
 
-export default function ProductCard({ product, isAdding, onAddToCart }: ProductCardProps) {
+export default function ProductCard({ product, isAdding, isPriority = false, onAddToCart }: ProductCardProps) {
   return (
     <div className="flex flex-col justify-between gap-3 rounded-lg border p-4">
       <div>
         {product.thumbnail ? (
-          <Image
-            src={product.thumbnail}
-            alt={product.title}
-            width={320}
-            height={144}
-            className="mb-3 h-36 w-full rounded bg-gray-50 object-cover"
-          />
+          <div className="relative mb-3 h-36 w-full overflow-hidden rounded bg-gray-50">
+            <Image
+              src={product.thumbnail}
+              alt={product.title}
+              fill
+              sizes="(max-width: 640px) 100vw, 320px"
+              loading={isPriority ? "eager" : "lazy"}
+              className="object-cover"
+            />
+          </div>
         ) : (
           <div className="mb-3 flex h-36 w-full items-center justify-center rounded bg-gray-100 text-sm text-gray-400">
             Sản phẩm mới
