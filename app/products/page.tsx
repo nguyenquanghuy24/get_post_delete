@@ -209,8 +209,8 @@ function ProductsContent() {
     <main className="min-h-screen bg-gray-100 px-4 py-8 text-gray-800">
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex items-center justify-between rounded-lg bg-white p-4 shadow">
-          <h1 className="text-xl font-bold">Bài 2: Sản phẩm &amp; Giỏ hàng</h1>
-          <Link href="/" className="text-sm text-blue-600 hover:underline">← Bài 1 (Todo)</Link>
+          <h1 className="text-xl font-bold">Task 2: Sản phẩm &amp; Giỏ hàng</h1>
+          <Link href="/" className="text-sm text-blue-600 hover:underline">← Task 1 (Todo)</Link>
         </div>
 
         {notice && <div className="rounded border border-green-400 bg-green-100 px-4 py-2 text-green-800">{notice}</div>}
