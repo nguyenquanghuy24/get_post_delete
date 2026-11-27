@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ApiError, apiRequest } from "@/services/api";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface UserProfile {
   id: number;
@@ -19,11 +20,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [retryCount, setRetryCount] = useState(0);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const clearSession = useAuthStore((state) => state.clearSession);
 
   useEffect(() => {
     const controller = new AbortController();
-    const accessToken = window.localStorage.getItem("accessToken");
-
     if (!accessToken) {
       router.replace("/login");
       return () => controller.abort();
@@ -41,8 +42,7 @@ export default function ProfilePage() {
         if (requestError instanceof DOMException && requestError.name === "AbortError") return;
 
         if (requestError instanceof ApiError && requestError.status === 401) {
-          window.localStorage.removeItem("accessToken");
-          window.localStorage.removeItem("refreshToken");
+          clearSession();
           router.replace("/login");
           return;
         }
@@ -55,11 +55,10 @@ export default function ProfilePage() {
 
     void loadProfile();
     return () => controller.abort();
-  }, [retryCount, router]);
+  }, [accessToken, clearSession, retryCount, router]);
 
   const handleLogout = () => {
-    window.localStorage.removeItem("accessToken");
-    window.localStorage.removeItem("refreshToken");
+    clearSession();
     router.replace("/login");
   };
 

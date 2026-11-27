@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { apiRequest } from "@/services/api";
+import { useAuthStore } from "@/stores/auth-store";
 
 interface LoginResponse {
   accessToken: string;
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const setTokens = useAuthStore((state) => state.setTokens);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -44,8 +46,7 @@ export default function LoginPage() {
           expiresInMins: 30,
         }),
       });
-      window.localStorage.setItem("accessToken", data.accessToken);
-      window.localStorage.setItem("refreshToken", data.refreshToken);
+      setTokens(data.accessToken, data.refreshToken);
       router.replace("/profile");
     } catch {
       setError("Tên đăng nhập hoặc mật khẩu không đúng.");

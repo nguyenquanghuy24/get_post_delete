@@ -4,8 +4,9 @@ import Link from "next/link";
 import { Suspense, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { apiRequest } from "@/services/api";
-import Cart, { type CartItem } from "@/components/Cart";
+import Cart from "@/components/Cart";
 import ProductCard, { type Product } from "@/components/ProductCard";
+import { useCartStore } from "@/stores/cart-store";
 
 const PAGE_SIZE = 6;
 
@@ -52,7 +53,11 @@ function ProductsContent() {
   const [cartSavingId, setCartSavingId] = useState<number | null>(null);
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const cart = useCartStore((state) => state.items);
+  const addCartItem = useCartStore((state) => state.addItem);
+  const increaseCartItem = useCartStore((state) => state.increase);
+  const decreaseCartItem = useCartStore((state) => state.decrease);
+  const removeCartItem = useCartStore((state) => state.remove);
   const [notice, setNotice] = useState("");
   const [searchInput, setSearchInput] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
@@ -189,13 +194,7 @@ function ProductsContent() {
         });
       }
 
-      setCart((previousCart) => {
-        const existing = previousCart.find((item) => item.id === product.id);
-        if (existing) {
-          return previousCart.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-        }
-        return [...previousCart, { id: product.id, title: product.title, price: product.price, quantity: 1 }];
-      });
+      addCartItem({ id: product.id, title: product.title, price: product.price });
       setNotice(`Đã thêm "${product.title}" vào giỏ hàng!`);
     } catch {
       setError("Không thể thêm sản phẩm vào giỏ hàng");
@@ -203,16 +202,6 @@ function ProductsContent() {
       setCartSavingId(null);
     }
   }
-
-  const updateQuantity = (id: number, change: number) => {
-    setCart((previousCart) => previousCart
-      .map((item) => item.id === id ? { ...item, quantity: item.quantity + change } : item)
-      .filter((item) => item.quantity > 0));
-  };
-
-  const removeFromCart = (id: number) => {
-    setCart((previousCart) => previousCart.filter((item) => item.id !== id));
-  };
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -273,7 +262,7 @@ function ProductsContent() {
               </form>
             </div>
 
-            <Cart items={cart} onUpdateQuantity={updateQuantity} onRemove={removeFromCart} />
+            <Cart items={cart} onUpdateQuantity={(id, change) => change > 0 ? increaseCartItem(id) : decreaseCartItem(id)} onRemove={removeCartItem} />
           </div>
 
           <div className="rounded-lg bg-white p-5 shadow md:col-span-2">
