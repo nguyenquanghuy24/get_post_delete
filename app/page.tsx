@@ -223,7 +223,7 @@ export default function Home() {
         )}
 
         {loading ? (
-          <p className="text-center text-gray-500">Đang tải...</p>
+          <p className="text-center text-gray-500">Đang tải</p>
         ) : todos.length === 0 ? (
           <p className="text-center text-gray-500">Chưa có công việc nào.</p>
         ) : visibleTodos.length === 0 ? (
